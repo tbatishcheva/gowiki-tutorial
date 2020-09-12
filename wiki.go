@@ -13,6 +13,13 @@ type Page struct {
 	Body  []byte
 }
 
+func (p *Page) save() error {
+	filename := p.Title + ".txt"
+
+	// the file should be created with read-write permissions for the current user only
+	return ioutil.WriteFile(filename, p.Body, 0600)
+}
+
 func loadPage(title string) (*Page, error) {
 	filename := title + ".txt"
 	body, err := ioutil.ReadFile(filename)
@@ -50,6 +57,14 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func saveHandler(w http.ResponseWriter, r *http.Request) {
+	title := r.URL.Path[len("/save/"):]
+
+	// The value returned by FormValue is of type string
+	body := r.FormValue("body")
+	p := &Page{Title: title, Body: []byte(body)}
+	p.save()
+
+	http.Redirect(w, r, "/view/"+title, http.StatusFound)
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
