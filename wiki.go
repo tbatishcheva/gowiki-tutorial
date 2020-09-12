@@ -13,6 +13,9 @@ type Page struct {
 	Body  []byte
 }
 
+// Must panics when passed a non-nil error value, and otherwise returns the *Template unaltered
+var templates = template.Must(template.ParseFiles("edit.html", "view.html"))
+
 func (p *Page) save() error {
 	filename := p.Title + ".txt"
 
@@ -72,16 +75,10 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-	t, err := template.ParseFiles(tmpl + ".html")
+	err := templates.ExecuteTemplate(w, tmpl+".html", p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}
-
-	// return a *template.Template
-	err = t.Execute(w, p)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
